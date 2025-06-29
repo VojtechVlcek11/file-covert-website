@@ -1,0 +1,40 @@
+services:
+  web:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgres://postgres:password@db:5432/postgres
+
+  sidekiq:
+    build: .
+    command: bundle exec sidekiq
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgres://postgres:password@db:5432/postgres
+
+  redis:
+    image: redis:7
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
